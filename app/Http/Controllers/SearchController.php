@@ -30,7 +30,8 @@ class SearchController extends Controller
 
         if($results->ok()){
 
-            $matchedPrograms = $this->filterSearchResult($results, $query);
+            $matchedPrograms = $this->filterSearchResult($results->json(), $query);
+
 
             return new ProgramCollection($matchedPrograms);
         }
@@ -50,7 +51,7 @@ class SearchController extends Controller
     {
 
         $showListCollection = collect();
-        foreach ($results->json() as $result) {
+        foreach ($results as $result) {
             $showList = new ShowListDTO($result);
             $showListCollection->push($showList);
         }
