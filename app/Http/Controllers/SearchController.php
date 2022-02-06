@@ -23,10 +23,10 @@ class SearchController extends Controller
     public function index(SearchRequest $request)
     {
         $route = $this->apiTV . '/search/shows';
-        $query = $request->query('q', '');
+        $query = strtolower($request->query('q', ''));
 
-        if(Cache::has('search.'. strtolower($query))){
-            return new ProgramCollection(Cache::get('search.'. strtolower($query)));
+        if(Cache::has('search.'. $query)){
+            return new ProgramCollection(Cache::get('search.'. $query));
         }
 
         $results = Http::get($route, [
@@ -37,7 +37,7 @@ class SearchController extends Controller
 
             $matchedPrograms = $this->filterSearchResult($results->json(), $query);
 
-            Cache::put('search.'. strtolower($query), $matchedPrograms, 3600);
+            Cache::put('search.'. $query, $matchedPrograms, 3600);
 
             return new ProgramCollection($matchedPrograms);
         }
@@ -55,7 +55,6 @@ class SearchController extends Controller
      */
     protected function filterSearchResult($results, $query)
     {
-
         $showListCollection = collect();
         foreach ($results as $result) {
             $showList = new ShowListDTO($result);
@@ -63,7 +62,7 @@ class SearchController extends Controller
         }
 
         $matchedPrograms = $showListCollection->filter(function($showList) use ($query){
-            return strpos(strtolower($showList->show->name), strtolower($query)) === 0;
+            return strpos(strtolower($showList->show->name), $query) === 0;
         });
 
        return $matchedPrograms;
