@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Dtos\ShowListDTO;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\ProgramCollection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class SearchController extends Controller
@@ -24,6 +25,10 @@ class SearchController extends Controller
         $route = $this->apiTV . '/search/shows';
         $query = $request->query('q', '');
 
+        if(Cache::has('search.'. strtolower($query))){
+            return new ProgramCollection(Cache::get('search.'. strtolower($query)));
+        }
+
         $results = Http::get($route, [
             'q' => $query
         ]);
@@ -32,6 +37,7 @@ class SearchController extends Controller
 
             $matchedPrograms = $this->filterSearchResult($results->json(), $query);
 
+            Cache::put('search.'. strtolower($query), $matchedPrograms, 3600);
 
             return new ProgramCollection($matchedPrograms);
         }
